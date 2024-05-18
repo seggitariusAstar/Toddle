@@ -1,0 +1,71 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// schema.prisma
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                Int       @id @default(autoincrement())
+  username          String    @unique
+  email             String    @unique
+  passwordHash      String
+  fullName          String?
+  bio               String?
+  profilePictureUrl String?
+  createdAt         DateTime  @default(now())
+  posts             Post[]
+  comments          Comment[]
+  likes             Like[]
+  followers         Follows[] @relation("followers")
+  following         Follows[] @relation("following")
+}
+
+model Post {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  content   String
+  imageUrl  String?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id])
+  likes     Like[]
+  comments  Comment[]
+}
+
+model Follows {
+  id           Int      @id @default(autoincrement())
+  followerId   Int
+  followeeId   Int
+  createdAt    DateTime @default(now())
+  follower     User     @relation("followers", fields: [followerId], references: [id])
+  followee     User     @relation("following", fields: [followeeId], references: [id])
+  
+  @@unique([followerId, followeeId])
+}
+
+model Like {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  postId    Int
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  post      Post     @relation(fields: [postId], references: [id])
+
+  @@unique([userId, postId])
+}
+
+model Comment {
+  id         Int      @id @default(autoincrement())
+  postId     Int
+  userId     Int
+  commentText String
+  createdAt  DateTime @default(now())
+  post       Post     @relation(fields: [postId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+}
